@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            color: white;
+            padding: 2rem 0;
+            border-radius: 0 0 10px 10px;
+            margin-bottom: 2rem;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            border: none;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+            font-weight: 600;
+        }
+        .result-card {
+            display: none;
+        }
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-selection {
+            height: auto !important;
+            min-height: 38px !important;
+        }
+        .disease-name {
+            color: #0d6efd;
+            font-weight: 700;
+        }
+        .confidence-bar {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #e9ecef;
+            margin-bottom: 1rem;
+        }
+        .confidence-level {
+            height: 100%;
+            background: linear-gradient(90deg, #0d6efd, #6610f2);
+            border-radius: 3px;
+        }
+        .disclaimer {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .symptom-badge {
+            background-color: #e7f1ff;
+            color: #0d6efd;
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            font-weight: 500;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <div class="container">
+            <h1 class="display-4">Medical Assistant</h1>
+            <p class="lead">Enter your symptoms to get a potential diagnosis and treatment recommendations</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Symptom Checker</div>
+            <div class="card-body">
+                <form id="symptomForm">
+                    <div class="mb-3">
+                        <label for="symptoms" class="form-label">What symptoms are you experiencing?</label>
+                        <select class="form-control" id="symptoms" multiple="multiple"></select>
+                        <div class="form-text">Select all symptoms that apply or type to search.</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Check Symptoms</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Analyzing symptoms...</p>
+        </div>
+
+        <div id="resultContainer" class="result-card">
+            <div class="card mb-4">
+                <div class="card-header">Diagnosis</div>
+                <div class="card-body">
+                    <h2 class="disease-name" id="diseaseName"></h2>
+                    <div class="confidence-bar">
+                        <div class="confidence-level" id="confidenceLevel"></div>
+                    </div>
+                    <p class="text-muted">Confidence: <span id="confidenceText"></span></p>
+                    
+                    <h5 class="mt-4">Matched Symptoms:</h5>
+                    <div id="matchedSymptoms"></div>
+                    
+                    <h5 class="mt-4">About this condition:</h5>
+                    <p id="diseaseDescription"></p>
+
+                    <div id="alternativesContainer" class="mt-4">
+                        <h5>Alternative Diagnoses:</h5>
+                        <ul id="alternativesList" class="list-group list-group-flush"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Recommended Precautions</div>
+                        <div class="card-body">
+                            <ul id="precautionsList" class="list-group list-group-flush"></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Potential Treatments</div>
+                        <div class="card-body">
+                            <ul id="medicationsList" class="list-group list-group-flush"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body disclaimer">
+                    <strong>Disclaimer:</strong> This tool provides general information only and should not be used for diagnosis or treatment decisions. Always consult with a qualified healthcare professional for medical advice.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#symptoms').select2({
+                placeholder: 'Type or select symptoms',
+                tags: true,
+                tokenSeparators: [',', ' '],
+                width: '100%'
+            });
+
+            // Fetch all symptoms
+            $.ajax({
+                url: '/get_symptoms',
+                type: 'GET',
+                success: function(symptoms) {
+                    symptoms.forEach(function(symptom) {
+                        $('#symptoms').append(new Option(symptom, symptom, false, false));
+                    });
+                }
+            });
+
+            // Handle form submission
+            $('#symptomForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const symptoms = $('#symptoms').val();
+                
+                if (!symptoms || symptoms.length === 0) {
+                    alert('Please select at least one symptom');
+                    return;
+                }
+                
+                // Show loading spinner
+                $('.loading').show();
+                $('#resultContainer').hide();
+                
+                // Send symptoms to the API
+                $.ajax({
+                    url: '/predict',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ symptoms: symptoms }),
+                    success: function(response) {
+                        $('.loading').hide();
+                        
+                        if (response.error) {
+                            alert(response.error);
+                            return;
+                        }
+                        
+                        // Display the results
+                        $('#diseaseName').text(response.disease);
+                        $('#confidenceText').text((response.confidence * 100).toFixed(1) + '%');
+                        $('#confidenceLevel').css('width', (response.confidence * 100) + '%');
+                        $('#diseaseDescription').text(response.description);
+                        
+                        // Show matched symptoms
+                        $('#matchedSymptoms').empty();
+                        response.matched_symptoms.forEach(function(symptom) {
+                            $('#matchedSymptoms').append(`<span class="symptom-badge">${symptom}</span>`);
+                        });
+                        
+                        // Display alternative diagnoses
+                        $('#alternativesList').empty();
+                        if (response.alternatives && response.alternatives.length > 1) {
+                            response.alternatives.slice(1).forEach(function(alt) {
+                                const confidence = (alt.probability * 100).toFixed(1);
+                                $('#alternativesList').append(`
+                                    <li class="list-group-item">
+                                        ${alt.disease} <span class="text-muted">(${confidence}% confidence)</span>
+                                    </li>
+                                `);
+                            });
+                            $('#alternativesContainer').show();
+                        } else {
+                            $('#alternativesContainer').hide();
+                        }
+                        
+                        // Display precautions
+                        $('#precautionsList').empty();
+                        response.precautions.forEach(function(precaution) {
+                            $('#precautionsList').append(`<li class="list-group-item">${precaution}</li>`);
+                        });
+                        
+                        // Display medications
+                        $('#medicationsList').empty();
+                        response.medications.forEach(function(medication) {
+                            $('#medicationsList').append(`<li class="list-group-item">${medication}</li>`);
+                        });
+                        
+                        // Show results
+                        $('#resultContainer').show();
+                        
+                        // Scroll to results
+                        $('html, body').animate({
+                            scrollTop: $('#resultContainer').offset().top - 20
+                        }, 500);
+                    },
+                    error: function(error) {
+                        $('.loading').hide();
+                        alert('An error occurred. Please try again.');
+                        console.error(error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
