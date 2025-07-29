@@ -292,7 +292,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues** - Report bugs via GitHub Issues
 - **Feature Requests** - Submit enhancement suggestions
 - **Documentation** - Check wiki for detailed guides
-- **Medical Concerns** - Consult qualified healthcare professionals
 
 ## 🔄 Version History
 
